@@ -9,5 +9,5 @@ npm i tagy -g
 
 #### Use it in terminal from working directory:
 ```
-tagy [-p, -m, --minor, --preminor, --patch, --prepatch, --major, --premajor]
+tagy [-p, -m, --minor, --patch, --major, --reverse, --info]
 ```

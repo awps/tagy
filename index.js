@@ -23,15 +23,12 @@ const chalk = require("chalk");
         args.patch ||
         args.minor ||
         args.major ||
-        args.prepatch ||
-        args.preminor ||
-        args.premajor ||
         args.reverse ||
         args.info
     )
 
     if (!haveOption) {
-        await console.log(chalk.red.bold('Please specify the increment type') + ' [-p, -m, --minor, --preminor, --patch, --prepatch, --major, --premajor, --reverse, --info]')
+        await console.log(chalk.red.bold('Please specify the increment type') + ' [-p, -m, --minor, --patch, --major, --reverse, --info]')
         await console.log(chalk.blue('Example: ') + chalk.yellow('tagy --patch'))
         return;
     }
@@ -108,12 +105,6 @@ const chalk = require("chalk");
             vv = semver.inc(vv, 'minor')
         } else if (args.major) {
             vv = semver.inc(vv, 'major')
-        } else if (args.prepatch) {
-            vv = semver.inc(vv, 'prepatch')
-        } else if (args.preminor) {
-            vv = semver.inc(vv, 'preminor')
-        } else if (args.premajor) {
-            vv = semver.inc(vv, 'premajor')
         } else {
             console.log(chalk.red(`Something went wrong!.`))
             return;
@@ -123,7 +114,7 @@ const chalk = require("chalk");
             const confirmMajorRelease = await prompts({
                 type: 'confirm',
                 name: 'value',
-                message: `Are you sure that you want to create a major release? Current tag is "${currentTag}" abd the next will be "${vv}"`,
+                message: `Are you sure that you want to create a major release? Current tag is "${currentTag}" and the next will be "${vv}"`,
                 initial: false
             })
 
