@@ -23,6 +23,10 @@ jobs:
         with:
           node-version: 10
           registry-url: https://registry.npmjs.org/
+      - run:
+        command: |
+          rm package-lock.json
+          sed -i -e 's|"version": "1.0.0"|"version": "'"$TAG"'"|g' ./package.json
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
