@@ -24,7 +24,7 @@
   "license": "MIT",
   "homepage": "https://github.com/awps/tagy#readme",
   "bin": {
-    "tagy": "./index.js"
+    "tagy": "./cli.js"
   },
   "dependencies": {},
   "devDependencies": {
