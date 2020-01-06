@@ -52,6 +52,8 @@ module.exports = function () {
                 return;
             }
 
+            shell.exec('git fetch --tags', {silent: true});
+            
             let vv = shell.exec('git tag --sort=committerdate | grep -E \'^[0-9]\' | tail -1', {silent: true}).stdout;
 
             if (args.info) {
