@@ -9,6 +9,35 @@ const args = require('yargs').argv
 const prompts = require('prompts')
 const chalk = require("chalk");
 
+
+const packageVersionBump = async (vv) => {
+    const pkgPath = path.join(process.cwd(), 'package.json')
+
+    if (fs.existsSync(pkgPath)) {
+        let pkgContent;
+
+        try {
+            pkgContent = await fs.readJSON(pkgPath);
+        } catch (err) {
+            throw new Error(`Couldn't parse "package.json"`)
+        }
+
+        pkgContent.version = vv;
+
+        try {
+            await fs.writeJSON(pkgPath, pkgContent, {
+                spaces: 2
+            });
+        } catch (err) {
+            throw new Error(`Couldn't write to "package.json"`)
+        }
+
+        return true;
+    }
+
+    return true;
+}
+
 module.exports = function () {
     (async () => {
         const totalArguments = Object.values(args).length;
@@ -126,35 +155,22 @@ module.exports = function () {
                 }
             }
 
-            // Update package.js
-            const pkgPath = path.join(process.cwd(), 'package.json')
+            let canCreate
 
-            if (fs.existsSync(pkgPath)) {
-                let pkgContent;
-
-                try {
-                    pkgContent = await fs.readJSON(pkgPath);
-                } catch (err) {
-                    throw new Error(`Couldn't parse "package.json"`)
-                }
-
-                pkgContent.version = vv;
-
-                try {
-                    await fs.writeJSON(pkgPath, pkgContent, {
-                        spaces: 2
-                    });
-                } catch (err) {
-                    throw new Error(`Couldn't write to "package.json"`)
-                }
+            try {
+                canCreate = await packageVersionBump(vv);
+            } catch (err) {
+                return console.log(err.message);
             }
 
-            await shell.exec(`git commit -a -m "Release ${vv}"`);
-            await shell.exec(`git push origin master`);
-            await shell.exec(`git tag ${vv}`);
-            await shell.exec(`git push origin ${vv}`);
+            if(canCreate){
+                await shell.exec(`git commit -a -m "Release ${vv}"`);
+                await shell.exec(`git push origin master`);
+                await shell.exec(`git tag ${vv}`);
+                await shell.exec(`git push origin ${vv}`);
 
-            await console.log(chalk.blue(`Tag ${vv} --> created!.`))
+                await console.log(chalk.blue(`Tag ${vv} --> created!.`))
+            }
         } catch (e) {
             console.log(e)
         }
