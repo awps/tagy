@@ -149,10 +149,10 @@ module.exports = function () {
                 }
             }
 
-            shell.exec(`git commit -a -m "Release ${vv}"`);
-            shell.exec(`git push origin master`);
-            shell.exec(`git tag ${vv}`);
-            shell.exec(`git push origin ${vv}`);
+            await shell.exec(`git commit -a -m "Release ${vv}"`);
+            await shell.exec(`git push origin master`);
+            await shell.exec(`git tag ${vv}`);
+            await shell.exec(`git push origin ${vv}`);
 
             await console.log(chalk.blue(`Tag ${vv} --> created!.`))
         } catch (e) {
