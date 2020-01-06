@@ -149,6 +149,8 @@ module.exports = function () {
                 }
             }
 
+            shell.exec(`git commit -a -m "Release ${vv}"`);
+            shell.exec(`git push origin master`);
             shell.exec(`git tag ${vv}`);
             shell.exec(`git push origin ${vv}`);
 
