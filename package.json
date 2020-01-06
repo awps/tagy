@@ -26,12 +26,13 @@
   "bin": {
     "tagy": "./cli.js"
   },
-  "dependencies": {},
-  "devDependencies": {
+  "dependencies": {
     "chalk": "^2.4.2",
+    "fs-extra": "^8.1.0",
     "prompts": "^2.3.0",
     "semver": "^6.3.0",
     "shelljs": "^0.8.3",
     "yargs": "^13.2.4"
-  }
+  },
+  "devDependencies": {}
 }

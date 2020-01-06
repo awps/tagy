@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict'
 
-const fs = require('fs')
+const fs = require('fs-extra')
 const path = require('path')
 const shell = require("shelljs")
 const semver = require('semver')
@@ -123,6 +123,29 @@ module.exports = function () {
 
                 if (!confirmMajorRelease.value) {
                     return console.log(chalk.red.bold('Aborted!'))
+                }
+            }
+
+            // Update package.js
+            const pkgPath = path.join(process.cwd(), 'package.json')
+
+            if (fs.existsSync(pkgPath)) {
+                let pkgContent;
+
+                try {
+                    pkgContent = await fs.readJSON(pkgPath);
+                } catch (err) {
+                    throw new Error(`Couldn't parse "package.json"`)
+                }
+
+                pkgContent.version = vv;
+
+                try {
+                    await fs.writeJSON(pkgPath, pkgContent, {
+                        spaces: 2
+                    });
+                } catch (err) {
+                    throw new Error(`Couldn't write to "package.json"`)
                 }
             }
 
