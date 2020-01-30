@@ -73,6 +73,20 @@ module.exports = function () {
             return;
         }
 
+        // Check for custom config inside of current directory.
+        const tagyExtraFile = path.resolve(`${process.cwd()}/tagy.js`);
+
+        try {
+            if (fs.existsSync(tagyExtraFile)) {
+                console.log('"tagy.js" file is found!');
+                const tagyExtra = require(tagyExtraFile)
+
+                await tagyExtra()
+            }
+        } catch (err) {
+            console.error(err)
+        }
+
         try {
             let currentBranchName = shell.exec("git branch | grep \\* | cut -d ' ' -f2", {silent: true}).stdout;
 
@@ -163,7 +177,7 @@ module.exports = function () {
                 return console.log(err.message);
             }
 
-            if(canCreate){
+            if (canCreate) {
                 await shell.exec(`git commit -a -m "Release ${vv}"`);
                 await shell.exec(`git push origin master`);
                 await shell.exec(`git tag ${vv}`);
