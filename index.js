@@ -73,20 +73,6 @@ module.exports = function () {
             return;
         }
 
-        // Check for custom config inside of current directory.
-        const tagyExtraFile = path.resolve(`${process.cwd()}/tagy.js`);
-
-        try {
-            if (fs.existsSync(tagyExtraFile)) {
-                console.log('"tagy.js" file is found!');
-                const tagyExtra = require(tagyExtraFile)
-
-                await tagyExtra()
-            }
-        } catch (err) {
-            console.error(err)
-        }
-
         try {
             let currentBranchName = shell.exec("git branch | grep \\* | cut -d ' ' -f2", {silent: true}).stdout;
 
@@ -171,10 +157,25 @@ module.exports = function () {
 
             let canCreate
 
+            // Bump the version in package.json
             try {
                 canCreate = await packageVersionBump(vv);
             } catch (err) {
                 return console.log(err.message);
+            }
+
+            // Check for custom config inside of current directory.
+            const tagyExtraFile = path.resolve(`${process.cwd()}/tagy.js`);
+
+            try {
+                if (fs.existsSync(tagyExtraFile)) {
+                    console.log('"tagy.js" file is found!');
+                    const tagyExtra = require(tagyExtraFile)
+
+                    await tagyExtra(vv, currentTag, args)
+                }
+            } catch (err) {
+                console.error(err)
             }
 
             if (canCreate) {
