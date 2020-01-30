@@ -13,3 +13,13 @@ npm i tagy -g
 ```
 tagy [-p, -m, --minor, --patch, --major, --reverse, --info]
 ```
+
+#### Custom scripts before `git push` is executed.
+Create a file in your project directory named `tagy.js` and inside export a module function with some logic. This functions will be executed just before the `git push` command is called.
+Doing so you have the option to manipulate the files before they are released. 
+For example: 
+```js 
+module.exports = () => {
+    console.log('Custom "tagy" scripts can be used before git push');
+}
+```
