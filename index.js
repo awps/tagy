@@ -54,11 +54,12 @@ module.exports = function () {
             args.minor ||
             args.major ||
             args.reverse ||
+            args.custom ||
             args.info
         )
 
         if (!haveOption) {
-            await console.log(chalk.red.bold('Please specify the increment type') + ' [-p, -m, --minor, --patch, --major, --reverse, --info]')
+            await console.log(chalk.red.bold('Please specify the increment type') + ' [-p, -m, --minor, --patch, --major, --reverse, --custom, --info]')
             await console.log(chalk.blue('Example: ') + chalk.yellow('tagy --patch'))
             return;
         }
@@ -119,39 +120,65 @@ module.exports = function () {
                 return;
             }
 
-            if (!vv) {
-                vv = '0.0.0';
-            }
+            let currentTag;
 
-            vv = vv.trim();
-
-            if (semver.ltr(vv, '0.0.0')) {
-                vv = '0.0.0'
-            }
-
-            const currentTag = vv;
-
-            if (args.p || args.patch) {
-                vv = semver.inc(vv, 'patch')
-            } else if (args.m || args.minor) {
-                vv = semver.inc(vv, 'minor')
-            } else if (args.major) {
-                vv = semver.inc(vv, 'major')
-            } else {
-                console.log(chalk.red(`Something went wrong!.`))
-                return;
-            }
-
-            if (args.major) {
-                const confirmMajorRelease = await prompts({
-                    type: 'confirm',
+            if (args.custom) {
+                const customVer = await prompts({
+                    type: 'text',
                     name: 'value',
-                    message: `Are you sure that you want to create a major release? Current tag is "${currentTag}" and the next will be "${vv}"`,
-                    initial: false
+                    message: 'Please enter a custom version. Make sure to be valid according to semver.org standard.',
+                    initial: false,
+                    validate: val => {
+                        if (!/\d+\.\d+\.\d+/g.test(val)) {
+                            return 'Invalid version!';
+                        }
+
+                        return true;
+                    }
                 })
 
-                if (!confirmMajorRelease.value) {
+                if (!customVer.value) {
                     return console.log(chalk.red.bold('Aborted!'))
+                }
+
+                vv = customVer.value;
+
+                currentTag = vv;
+            } else {
+                if (!vv) {
+                    vv = '0.0.0';
+                }
+
+                vv = vv.trim();
+
+                if (semver.ltr(vv, '0.0.0')) {
+                    vv = '0.0.0'
+                }
+
+                currentTag = vv;
+
+                if (args.p || args.patch) {
+                    vv = semver.inc(vv, 'patch')
+                } else if (args.m || args.minor) {
+                    vv = semver.inc(vv, 'minor')
+                } else if (args.major) {
+                    vv = semver.inc(vv, 'major')
+                } else {
+                    console.log(chalk.red(`Something went wrong!.`))
+                    return;
+                }
+
+                if (args.major) {
+                    const confirmMajorRelease = await prompts({
+                        type: 'confirm',
+                        name: 'value',
+                        message: `Are you sure that you want to create a major release? Current tag is "${currentTag}" and the next will be "${vv}"`,
+                        initial: false
+                    })
+
+                    if (!confirmMajorRelease.value) {
+                        return console.log(chalk.red.bold('Aborted!'))
+                    }
                 }
             }
 
