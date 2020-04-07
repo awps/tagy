@@ -36,3 +36,17 @@ module.exports = (newVersion, oldVersion, args) => {
     console.log('Custom "tagy" scripts can be used before git push');
 }
 ```
+
+A real example, replacing the version in a css file.
+```
+const path = require('path');
+const replace = require('replace-in-file');
+
+module.exports = (newVersion, oldVersion, args) => {
+    replace.sync({
+        files: path.resolve(__dirname, 'src/style.css'),
+        from: /Version: \d+\.\d+\.\d+/g,
+        to: `Version: ${newVersion}`,
+    });
+}
+```
