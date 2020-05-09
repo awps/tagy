@@ -142,7 +142,9 @@ module.exports = function () {
                     return console.log(chalk.red.bold('Aborted!'))
                 }
 
-                currentTag = `${vv}-prod`;
+                vv = customVer.value;
+
+                currentTag = vv;
             }
             else if (args.prod) {
                 const confirmProdRelease = await prompts({
@@ -156,9 +158,7 @@ module.exports = function () {
                     return console.log(chalk.red.bold('Aborted!'))
                 }
 
-                vv = confirmProdRelease.value;
-
-                currentTag = vv;
+                vv = vv.trim() + `-prod`;
             } else {
                 if (!vv) {
                     vv = '0.0.0';
