@@ -55,11 +55,12 @@ module.exports = function () {
             args.major ||
             args.reverse ||
             args.custom ||
+            args.prod ||
             args.info
         )
 
         if (!haveOption) {
-            await console.log(chalk.red.bold('Please specify the increment type') + ' [-p, -m, --minor, --patch, --major, --reverse, --custom, --info]')
+            await console.log(chalk.red.bold('Please specify the increment type') + ' [-p, -m, --minor, --patch, --major, --reverse, --custom, --prod, --info]')
             await console.log(chalk.blue('Example: ') + chalk.yellow('tagy --patch'))
             return;
         }
@@ -142,6 +143,22 @@ module.exports = function () {
                 }
 
                 vv = customVer.value;
+
+                currentTag = `${vv}-prod`;
+            }
+            else if (args.prod) {
+                const confirmProdRelease = await prompts({
+                    type: 'confirm',
+                    name: 'value',
+                    message: `Create production tag?`,
+                    initial: false
+                })
+
+                if (!confirmProdRelease.value) {
+                    return console.log(chalk.red.bold('Aborted!'))
+                }
+
+                vv = confirmProdRelease.value;
 
                 currentTag = vv;
             } else {
