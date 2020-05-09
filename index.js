@@ -142,8 +142,6 @@ module.exports = function () {
                     return console.log(chalk.red.bold('Aborted!'))
                 }
 
-                vv = customVer.value;
-
                 currentTag = `${vv}-prod`;
             }
             else if (args.prod) {
