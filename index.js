@@ -74,6 +74,13 @@ module.exports = function () {
             return;
         }
 
+        const pkgPath = path.join(process.cwd(), 'package.json')
+
+        if (!fs.existsSync(pkgPath)) {
+            await console.log(chalk.red.bold('package.json not found. Make sure that you are in the right directory!'))
+            return;
+        }
+
         try {
             let currentBranchName = shell.exec("git branch | grep \\* | cut -d ' ' -f2", {silent: true}).stdout;
 
