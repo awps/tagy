@@ -90,7 +90,7 @@ module.exports = function () {
 
             const branchName = currentBranchName.trim();
 
-            if (branchName !== 'master' || branchName !== 'main') {
+            if (!(branchName === 'master' || branchName === 'main')) {
                 // await console.log(chalk.red.bold('You can create tags only from "master" branch.'))
                 // return;
 
