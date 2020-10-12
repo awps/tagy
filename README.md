@@ -1,6 +1,6 @@
 ## tagy 
 
-A easy way to create a release by tagging it in git directly from local repo using the terminal. 
+An easy way to create Git releases using git tags. 
 Create a new git tag by following the 'Semantic Versioning' and push it on remote. 
  > Note: This will also bump the version in `package.json` before pushing it on remote origin.
 

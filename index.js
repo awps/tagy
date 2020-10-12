@@ -84,9 +84,26 @@ module.exports = function () {
         try {
             let currentBranchName = shell.exec("git branch | grep \\* | cut -d ' ' -f2", {silent: true}).stdout;
 
-            if (!currentBranchName || currentBranchName.trim() !== 'master') {
-                await console.log(chalk.red.bold('You can create tags only from "master" branch.'))
-                return;
+            if (!currentBranchName){
+                return console.log(chalk.red.bold('Can\'t determine the branch name!'))
+            }
+
+            const branchName = currentBranchName.trim();
+
+            if (branchName !== 'master' || branchName !== 'main') {
+                // await console.log(chalk.red.bold('You can create tags only from "master" branch.'))
+                // return;
+
+                const confirmBranch = await prompts({
+                    type: 'confirm',
+                    name: 'value',
+                    message: `Current branch name is '${branchName}'. Do you want to tag this branch?`,
+                    initial: false
+                });
+
+                if (!confirmBranch.value) {
+                    return console.log(chalk.red.bold('Aborted! Please switch the branch.'))
+                }
             }
 
             shell.exec('git fetch --tags', {silent: true});
@@ -214,7 +231,7 @@ module.exports = function () {
 
             if (canCreate) {
                 await shell.exec(`git commit -a -m "Release ${vv}"`);
-                await shell.exec(`git push origin master`);
+                await shell.exec(`git push origin ${branchName}`);
                 await shell.exec(`git tag ${vv}`);
                 await shell.exec(`git push origin ${vv}`);
 
