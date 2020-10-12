@@ -13,7 +13,7 @@ npm i tagy -g
 
 #### Use it in terminal from working directory:
 ```
-tagy [-p, -m, --minor, --patch, --major, --reverse, --info]
+tagy [-p, -m, --minor, --patch, --major, --reverse, --info, --custom]
 ```
 
 ##### Arguments
@@ -23,6 +23,7 @@ tagy [-p, -m, --minor, --patch, --major, --reverse, --info]
 --major      # Will increase the version like so: 1.0.0 => 2.0.0
 --reverse    # Will remove the last tag and revert to previously created one.
 --info       # Get some info about current project.
+--custom     # Define the new Semantic version manually.
 ```
 
 ## Extend the 
