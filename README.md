@@ -26,7 +26,7 @@ tagy [-p, -m, --minor, --patch, --major, --reverse, --info, --custom]
 --custom     # Define the new Semantic version manually.
 ```
 
-## Extend the 
+## Extend it:
 
 #### Custom scripts before `git push` is executed.
 Create a file in your project directory named `tagy.js` and inside export a module function with some logic. This function will be executed just before the `git push` command is called.
