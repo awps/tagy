@@ -230,6 +230,8 @@ module.exports = function () {
             }
 
             if (canCreate) {
+                await shell.exec(`git config --global core.autocrlf true`);// Replace CRLF with LF on Windows OS.
+                await shell.exec(`git config --global core.safecrlf false`);// Disable CRLF warnings.
                 await shell.exec(`git commit -a -m "Release ${vv}"`);
                 await shell.exec(`git push origin ${branchName}`);
                 await shell.exec(`git tag ${vv}`);
