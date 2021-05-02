@@ -81,46 +81,77 @@ module.exports = function () {
             return;
         }
 
+        // Get package.json configuration
+        let pkgContent;
+
         try {
-            let currentBranchName = shell.exec("git branch | grep \\* | cut -d ' ' -f2", {silent: true}).stdout;
+            pkgContent = await fs.readJSON(pkgPath);
+        } catch (err) {
+            throw new Error(`Couldn't parse "package.json"`)
+        }
 
-            if (!currentBranchName){
-                return console.log(chalk.red.bold('Can\'t determine the branch name!'))
-            }
+        let vv;
 
-            const branchName = currentBranchName.trim();
+        // This will soft create a tag
+        // ----------------------------------------------------------------------------
+        const isSoft = pkgContent && pkgContent.tagy && pkgContent.tagy.method === 'soft';
 
-            if (!(branchName === 'master' || branchName === 'main')) {
-                // await console.log(chalk.red.bold('You can create tags only from "master" branch.'))
-                // return;
+        if (isSoft) {
+            // const softProcessor = require(process.cwd(), 'soft.js')
 
-                const confirmBranch = await prompts({
-                    type: 'confirm',
-                    name: 'value',
-                    message: `Current branch name is '${branchName}'. Do you want to tag this branch?`,
-                    initial: false
-                });
+            console.log(chalk.white.bgGreen('Is Soft!'));
+        }
 
-                if (!confirmBranch.value) {
-                    return console.log(chalk.red.bold('Aborted! Please switch the branch.'))
-                }
-            }
+        // This will create the tag in git
+        // ----------------------------------------------------------------------------
+        try {
+            if (!isSoft) {
+                let currentBranchName = shell.exec("git branch | grep \\* | cut -d ' ' -f2", {silent: true}).stdout;
 
-            shell.exec('git fetch --tags', {silent: true});
-
-            let vv = shell.exec('git tag --sort=v:refname | grep -E \'^[0-9]\' | tail -1', {silent: true}).stdout;
-
-            if (args.info) {
-                if (!vv) {
-                    await console.log(chalk.blue(`Looks like no tags were created by this moment.`))
-                } else {
-                    await console.log(chalk.blue(`Last created tag is: ${vv}`))
+                if (!currentBranchName) {
+                    return console.log(chalk.red.bold('Can\'t determine the branch name!'))
                 }
 
-                return;
+                const branchName = currentBranchName.trim();
+
+                if (!(branchName === 'master' || branchName === 'main')) {
+                    // await console.log(chalk.red.bold('You can create tags only from "master" branch.'))
+                    // return;
+
+                    const confirmBranch = await prompts({
+                        type: 'confirm',
+                        name: 'value',
+                        message: `Current branch name is '${branchName}'. Do you want to tag this branch?`,
+                        initial: false
+                    });
+
+                    if (!confirmBranch.value) {
+                        return console.log(chalk.red.bold('Aborted! Please switch the branch.'))
+                    }
+                }
+
+                shell.exec('git fetch --tags', {silent: true});
+
+                vv = shell.exec('git tag --sort=v:refname | grep -E \'^[0-9]\' | tail -1', {silent: true}).stdout;
+
+                if (args.info) {
+                    if (!vv) {
+                        await console.log(chalk.blue(`Looks like no tags were created by this moment.`))
+                    } else {
+                        await console.log(chalk.blue(`Last created tag is: ${vv}`))
+                    }
+
+                    return;
+                }
+            } else {
+                vv = pkgContent.version;
             }
 
             if (args.reverse) {
+                if (isSoft) {
+                    return console.log(chalk.red(`Can't perform a reverse when the method is soft. Please reverse it manually.`))
+                }
+
                 if (!vv) {
                     await console.log(chalk.blue(`Looks like no tags were created by this moment. Nothing to delete.`))
                 } else {
@@ -230,12 +261,14 @@ module.exports = function () {
             }
 
             if (canCreate) {
-                await shell.exec(`git config --global core.autocrlf true`);// Replace CRLF with LF on Windows OS.
-                await shell.exec(`git config --global core.safecrlf false`);// Disable CRLF warnings.
-                await shell.exec(`git commit -a -m "Release ${vv}"`);
-                await shell.exec(`git push origin ${branchName}`);
-                await shell.exec(`git tag ${vv}`);
-                await shell.exec(`git push origin ${vv}`);
+                if (!isSoft) {
+                    await shell.exec(`git config --global core.autocrlf true`);// Replace CRLF with LF on Windows OS.
+                    await shell.exec(`git config --global core.safecrlf false`);// Disable CRLF warnings.
+                    await shell.exec(`git commit -a -m "Release ${vv}"`);
+                    await shell.exec(`git push origin ${branchName}`);
+                    await shell.exec(`git tag ${vv}`);
+                    await shell.exec(`git push origin ${vv}`);
+                }
 
                 await console.log(chalk.blue(`Tag ${vv} --> created!.`))
             }
