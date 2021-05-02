@@ -51,3 +51,19 @@ module.exports = (newVersion, oldVersion, args) => {
     });
 }
 ```
+
+## Soft tag:
+_New in version 1.8_
+
+A soft tag will allow to create a new version which will update only the `package.json` and follow any rules in `tagy.js` file, 
+but will not commit the changes to git or create a new git tag.
+
+So basically, it will do only a search and replace in files without affecting the git tags.
+
+To enable this, add the following in `package.json`: 
+```
+"tagy": {
+    "method": "soft"
+}
+```
+
