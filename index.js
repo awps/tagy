@@ -97,10 +97,10 @@ module.exports = function () {
         const isSoft = pkgContent && pkgContent.tagy && pkgContent.tagy.method === 'soft';
 
         if (isSoft) {
-            // const softProcessor = require(process.cwd(), 'soft.js')
-
             console.log(chalk.white.bgGreen('Is Soft!'));
         }
+
+        let branchName;
 
         // This will create the tag in git
         // ----------------------------------------------------------------------------
@@ -112,7 +112,7 @@ module.exports = function () {
                     return console.log(chalk.red.bold('Can\'t determine the branch name!'))
                 }
 
-                const branchName = currentBranchName.trim();
+                branchName = currentBranchName.trim();
 
                 if (!(branchName === 'master' || branchName === 'main')) {
                     // await console.log(chalk.red.bold('You can create tags only from "master" branch.'))
