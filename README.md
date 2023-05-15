@@ -18,9 +18,9 @@ tagy [-p, -m, --minor, --patch, --major, --reverse, --info, --custom]
 
 ##### Arguments
 ```sh 
--p, --patch  # Will increase the version like so: 1.0.0 => 1.0.1
--m, --minor  # Will increase the version like so: 1.0.0 => 1.1.0
---major      # Will increase the version like so: 1.0.0 => 2.0.0
+-p, --patch  # Will increase the version from 1.0.0 to 1.0.1
+-m, --minor  # Will increase the version from 1.0.0 to 1.1.0
+--major      # Will increase the version from 1.0.0 to 2.0.0
 --reverse    # Will remove the last tag and revert to previously created one.
 --info       # Get some info about current project.
 --custom     # Define the new Semantic version manually.
