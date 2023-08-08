@@ -9,7 +9,6 @@ const args = require('yargs').argv
 const prompts = require('prompts')
 const chalk = require("chalk");
 
-
 const packageVersionBump = async (vv) => {
     const pkgPath = path.join(process.cwd(), 'package.json')
 
@@ -90,6 +89,8 @@ module.exports = function () {
             throw new Error(`Couldn't parse "package.json"`)
         }
 
+        const tagPrefix = (pkgContent && pkgContent.tagy && pkgContent.tagy.tagPrefix) || '';
+
         let vv;
 
         // This will soft create a tag
@@ -132,7 +133,8 @@ module.exports = function () {
 
                 shell.exec('git fetch --tags', {silent: true});
 
-                vv = shell.exec('git tag --sort=v:refname | grep -E \'^[0-9]\' | tail -1', {silent: true}).stdout;
+                // vv = shell.exec('git tag --sort=v:refname | grep -E \'^[0-9]\' | tail -1', {silent: true}).stdout;
+                vv = shell.exec(`git tag --sort=v:refname | grep -E '^${tagPrefix}[0-9]' | tail -1`, {silent: true}).stdout;
 
                 if (args.info) {
                     if (!vv) {
@@ -183,11 +185,17 @@ module.exports = function () {
                     name: 'value',
                     message: 'Please enter a custom version. Make sure to be valid according to semver.org standard.',
                     initial: false,
+                    // validate: val => {
+                    //     if (!/\d+\.\d+\.\d+/g.test(val)) {
+                    //         return 'Invalid version!';
+                    //     }
+                    //
+                    //     return true;
+                    // }
                     validate: val => {
-                        if (!/\d+\.\d+\.\d+/g.test(val)) {
+                        if (!new RegExp(`^${tagPrefix}\\d+\\.\\d+\\.\\d+$`).test(val)) {
                             return 'Invalid version!';
                         }
-
                         return true;
                     }
                 })
@@ -264,10 +272,14 @@ module.exports = function () {
                 if (!isSoft) {
                     await shell.exec(`git config --global core.autocrlf true`);// Replace CRLF with LF on Windows OS.
                     await shell.exec(`git config --global core.safecrlf false`);// Disable CRLF warnings.
-                    await shell.exec(`git commit -a -m "Release ${vv}"`);
+                    // await shell.exec(`git commit -a -m "Release ${vv}"`);
+                    // await shell.exec(`git push origin ${branchName}`);
+                    // await shell.exec(`git tag ${vv}`);
+                    // await shell.exec(`git push origin ${vv}`);
+                    await shell.exec(`git commit -a -m "Release ${tagPrefix}${vv}"`);
                     await shell.exec(`git push origin ${branchName}`);
-                    await shell.exec(`git tag ${vv}`);
-                    await shell.exec(`git push origin ${vv}`);
+                    await shell.exec(`git tag ${tagPrefix}${vv}`);
+                    await shell.exec(`git push origin ${tagPrefix}${vv}`);
                 }
 
                 await console.log(chalk.blue(`Tag ${vv} --> created!.`))

@@ -67,3 +67,16 @@ To enable this, add the following in `package.json`:
 }
 ```
 
+## Tag Prefix:
+_New in version 1.9_
+
+This allows to create releases with a prefix.
+
+For example, if you want to create a release with a prefix `v` and the version is `1.0.0`, the tag will be `v1.0.0`.
+
+To enable this, add the following in `package.json`: 
+```
+"tagy": {
+    "tagPrefix": "v"
+}
+```
