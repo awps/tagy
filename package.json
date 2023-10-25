@@ -1,6 +1,6 @@
 {
   "name": "tagy",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "Create a new git tag by following the 'Semantic Versioning' and push it on remote.",
   "main": "index.js",
   "scripts": {
@@ -30,9 +30,9 @@
     "chalk": "^2.4.2",
     "fs-extra": "^8.1.0",
     "prompts": "^2.3.0",
+    "replace-in-file": "^7.0.1",
     "semver": "^6.3.0",
     "shelljs": "^0.8.3",
     "yargs": "^13.2.4"
-  },
-  "devDependencies": {}
+  }
 }

@@ -8,6 +8,7 @@ const semver = require('semver')
 const args = require('yargs').argv
 const prompts = require('prompts')
 const chalk = require("chalk");
+const replace = require("replace-in-file");
 
 const packageVersionBump = async (vv) => {
     const pkgPath = path.join(process.cwd(), 'package.json')
@@ -41,7 +42,7 @@ module.exports = function () {
     (async () => {
         const totalArguments = Object.values(args).length;
 
-        if (totalArguments > 3) {
+        if (totalArguments > 4) {
             await console.log(chalk.red.bold('Too many arguments!'))
             return;
         }
@@ -57,8 +58,19 @@ module.exports = function () {
             args.info
         )
 
-        if (!haveOption) {
-            await console.log(chalk.red.bold('Please specify the increment type') + ' [-p, -m, --minor, --patch, --major, --reverse, --custom, --info]')
+        if (!haveOption || args.h) {
+            await console.log(chalk.red.bold(`'Please specify the increment type') [-p, -m, --minor, --patch, --major, --reverse, --custom, --info, --soft]'
+
+Options: 
+-p, --patch  # Will increase the version from 1.0.0 to 1.0.1
+-m, --minor  # Will increase the version from 1.0.0 to 1.1.0
+--major      # Will increase the version from 1.0.0 to 2.0.0
+--reverse    # Will remove the last tag and revert to previously created one.
+--info       # Get some info about current project.
+--custom     # Define the new Semantic version manually.
+--soft       # Create a soft tag. This will not commit the changes to git or create a new git tag.
+-h, --help   # Show this message.
+            `));
             await console.log(chalk.blue('Example: ') + chalk.yellow('tagy --patch'))
             return;
         }
@@ -95,10 +107,14 @@ module.exports = function () {
 
         // This will soft create a tag
         // ----------------------------------------------------------------------------
-        const isSoft = pkgContent && pkgContent.tagy && pkgContent.tagy.method === 'soft';
+        const isSoft = args.soft || (pkgContent && pkgContent.tagy && (pkgContent.tagy.soft || pkgContent.tagy.method === 'soft'));
+
+        if (pkgContent && pkgContent.tagy && pkgContent.tagy.method === 'soft'){
+            console.log(chalk.red(`{"method": "soft"} is deprecated, please use {"soft": true} instead.`))
+        }
 
         if (isSoft) {
-            console.log(chalk.white.bgGreen('Is Soft!'));
+            console.log(chalk.green('➡️ Soft Processing!'));
         }
 
         let branchName;
@@ -193,7 +209,7 @@ module.exports = function () {
                     //     return true;
                     // }
                     validate: val => {
-                        if (!new RegExp(`^${tagPrefix}\\d+\\.\\d+\\.\\d+$`).test(val)) {
+                        if (!new RegExp(`^\\d+\\.\\d+\\.\\d+$`).test(val)) {
                             return 'Invalid version!';
                         }
                         return true;
@@ -268,6 +284,29 @@ module.exports = function () {
                 console.error(err)
             }
 
+            // In some configurations, the replacements can be defined in the package.json.
+            const replacementMethods = pkgContent && pkgContent.tagy && pkgContent.tagy.replace && Array.isArray(pkgContent.tagy.replace) ? pkgContent.tagy.replace : [];
+
+            if (replacementMethods.length > 0) {
+                console.log(chalk.green('♾️ Replacement methods are found!'));
+
+                for (let i = 0; i < replacementMethods.length; i++) {
+                    const {files, from, to, flags} = replacementMethods[i];
+
+                    if (files && from && to) {
+                        const _files = Array.isArray(files) ? files : [files];
+
+                        const replaceConf = {
+                            files: _files.map(file => path.resolve(`${process.cwd()}/${file}`)),
+                            from: new RegExp(from.replaceAll('__CURRENT_TAG__', currentTag).replaceAll('__VERSION__', vv), flags !== false ? (flags || 'g') : undefined),
+                            to: to.replaceAll('__CURRENT_TAG__', currentTag).replaceAll('__VERSION__', vv),
+                        };
+
+                        replace.sync(replaceConf);
+                    }
+                }
+            }
+
             if (canCreate) {
                 if (!isSoft) {
                     await shell.exec(`git config --global core.autocrlf true`);// Replace CRLF with LF on Windows OS.
@@ -282,7 +321,7 @@ module.exports = function () {
                     await shell.exec(`git push origin ${tagPrefix}${vv}`);
                 }
 
-                await console.log(chalk.blue(`Tag ${vv} --> created!.`))
+                await console.log(chalk.blue(`💥 Tag ${vv} --> created!.`))
             }
         } catch (e) {
             console.log(e)
