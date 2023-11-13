@@ -337,14 +337,18 @@ Options:
                     if (ghInstalled) {
                         const autoRelease = args['auto-release'] || (pkgContent && pkgContent.tagy && pkgContent.tagy['auto-release']);
 
-                        const ghRelease = await prompts({
-                            type: 'confirm',
-                            name: 'value',
-                            message: `Do you want to create a release on GitHub?`,
-                            initial: false
-                        })
+                        let releaseIt = autoRelease;
 
-                        const releaseIt = autoRelease || ghRelease.value;
+                        if (!autoRelease) {
+                            const ghRelease = await prompts({
+                                type: 'confirm',
+                                name: 'value',
+                                message: `Do you want to create a release on GitHub?`,
+                                initial: false
+                            });
+
+                            releaseIt = ghRelease.value;
+                        }
 
                         if (releaseIt) {
                             await shell.exec(`gh release create ${tagPrefix}${vv} --title "${tagPrefix}${vv}" --notes "Release ${tagPrefix}${vv}"`)
