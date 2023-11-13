@@ -85,6 +85,17 @@ Options:
             return;
         }
 
+        // abort if multiple args are passed from this list [p, m, major, minor, patch]
+        // if in array then abort
+        const multipleArgs = ['p', 'm', 'major', 'minor', 'patch', 'reverse', 'custom', 'info'];
+        const multipleArgsPassed = multipleArgs.filter(arg => args[arg]);
+
+        if (multipleArgsPassed.length > 1) {
+            await console.log(chalk.red.bold('Too many arguments!'))
+            return;
+        }
+
+        // read package.json
         const pkgPath = path.join(process.cwd(), 'package.json')
 
         if (!fs.existsSync(pkgPath)) {
@@ -324,6 +335,8 @@ Options:
                     const ghInstalled = shell.exec(`gh --version`, {silent: true}).stdout;
 
                     if (ghInstalled) {
+                        const autoRelease = args['auto-release'] || (pkgContent && pkgContent.tagy && pkgContent.tagy['auto-release']);
+
                         const ghRelease = await prompts({
                             type: 'confirm',
                             name: 'value',
@@ -331,7 +344,9 @@ Options:
                             initial: false
                         })
 
-                        if (ghRelease.value) {
+                        const releaseIt = autoRelease || ghRelease.value;
+
+                        if (releaseIt) {
                             await shell.exec(`gh release create ${tagPrefix}${vv} --title "${tagPrefix}${vv}" --notes "Release ${tagPrefix}${vv}"`)
                         }
                     }

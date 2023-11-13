@@ -146,3 +146,7 @@ In the above example we replace the version from style.css with the new version 
 
 ## New in version 1.10.1
 * Added Github release prompt. This will allow to create a Github release directly from terminal after the tag is created.
+
+## New in version 1.10.3
+* Added `--auto-release` argument to create a Github release directly from terminal after the tag is created (automatically, without confirmation).
+* Added `auto-release` option in `package.json` file. This will allow to create a Github release directly from terminal after the tag is created (automatically, without confirmation).
