@@ -142,3 +142,7 @@ In the above example we replace the version from style.css with the new version 
 ### Other changes in version 1.10 include:
 * Added `--soft` argument to create a soft tag directly from terminal.
 * Deprecated `{"method": "soft"}` in `package.json` file. Use `{"soft": true}` instead.
+
+
+## New in version 1.10.1
+* Added Github release prompt. This will allow to create a Github release directly from terminal after the tag is created.

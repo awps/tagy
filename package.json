@@ -1,6 +1,6 @@
 {
   "name": "tagy",
-  "version": "1.10.1",
+  "version": "1.10.2",
   "description": "Create a new git tag by following the 'Semantic Versioning' and push it on remote.",
   "main": "index.js",
   "scripts": {
