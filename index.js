@@ -319,6 +319,22 @@ Options:
                     await shell.exec(`git push origin ${branchName}`);
                     await shell.exec(`git tag ${tagPrefix}${vv}`);
                     await shell.exec(`git push origin ${tagPrefix}${vv}`);
+
+                    // Check if github CLI is installed and create a release
+                    const ghInstalled = shell.exec(`gh --version`, {silent: true}).stdout;
+
+                    if (ghInstalled) {
+                        const ghRelease = await prompts({
+                            type: 'confirm',
+                            name: 'value',
+                            message: `Do you want to create a release on GitHub?`,
+                            initial: false
+                        })
+
+                        if (ghRelease.value) {
+                            await shell.exec(`gh release create ${tagPrefix}${vv} --title "${tagPrefix}${vv}" --notes "Release ${tagPrefix}${vv}"`)
+                        }
+                    }
                 }
 
                 await console.log(chalk.blue(`💥 Tag ${vv} --> created!.`))
