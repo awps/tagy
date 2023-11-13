@@ -40,6 +40,13 @@ const packageVersionBump = async (vv) => {
 
 module.exports = function () {
     (async () => {
+        const autoRelease = args['auto-release'] || (pkgContent && pkgContent.tagy && pkgContent.tagy['auto-release']);
+
+        console.log(args);
+
+        return;
+
+
         const totalArguments = Object.values(args).length;
 
         if (totalArguments > 5) {
