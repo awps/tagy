@@ -18,14 +18,15 @@ tagy [-p, -m, --minor, --patch, --major, --reverse, --info, --custom, -h]
 
 ##### Arguments
 ```sh 
--p, --patch  # Will increase the version from 1.0.0 to 1.0.1
--m, --minor  # Will increase the version from 1.0.0 to 1.1.0
---major      # Will increase the version from 1.0.0 to 2.0.0
---reverse    # Will remove the last tag and revert to previously created one.
---info       # Get some info about current project.
---custom     # Define the new Semantic version manually.
---soft       # Create a soft tag. This will not commit the changes to git or create a new git tag.
--h           # Show help information.
+-p, --patch    # Will increase the version from 1.0.0 to 1.0.1
+-m, --minor    # Will increase the version from 1.0.0 to 1.1.0
+--major        # Will increase the version from 1.0.0 to 2.0.0
+--reverse      # Will remove the last tag and revert to previously created one.
+--info         # Get some info about current project.
+--custom       # Define the new Semantic version manually.
+--soft         # Create a soft tag. This will not commit the changes to git or create a new git tag.
+--auto-release # Automatically create a Github release after the tag is created.
+-h             # Show help information.
 ```
 
 ## `package.json` configuration:
@@ -36,6 +37,7 @@ _All parameters are optional._
 "tagy": {
     "tagPrefix": "v",
     "soft": true,
+    "auto-release": true,
     "replace": [
         {
             "files": "themes/custom/style.css",
@@ -50,6 +52,7 @@ _All parameters are optional._
 Description of the above parameters:
 * `tagPrefix` - (optional) Allows to create releases with a prefix. For example, if you want to create a release with a prefix `v` and the version is `1.0.0`, the tag will be `v1.0.0`. The tag in git will be `v1.0.0`.
 * `soft` - (optional) Allows to create a new version which will update only the `package.json` and follow any rules in `tagy.js` file or `package.json`, but will not commit the changes to git or create a new git tag. So basically, it will do only a search and replace in files without affecting the git tags.
+* `auto-release` - (optional) Allows to create a Github release directly from terminal after the tag is created (automatically, without confirmation).
 * `replace` - (optional) Allows to define custom replacement rules in `package.json` file. For example, if you want to replace the version in a file named `style.css` with the version from `package.json`, add the following in `package.json`: 
   * `files` - (required) The file or files where the replacement will be done. This can be a string or an array of strings. Relative to `package.json` file!
   * `from` - (required) The string or regex to search for. If you define a regex, make sure to escape the special characters and double escape the backslash. 

@@ -42,7 +42,7 @@ module.exports = function () {
     (async () => {
         const totalArguments = Object.values(args).length;
 
-        if (totalArguments > 4) {
+        if (totalArguments > 5) {
             await console.log(chalk.red.bold('Too many arguments!'))
             return;
         }
