@@ -29,6 +29,12 @@ describe('loadConfig', () => {
     expect(legacy).toBeNull()
     expect(config).toMatchObject({ tagPrefix: 'v', bump: ['package.json'] })
   })
+  it('reads .tagyrc.json when .tagyrc absent', () => {
+    writeFileSync(join(dir, '.tagyrc.json'), JSON.stringify({ tagPrefix: 'v', bump: ['composer.json'] }))
+    const { config, legacy } = loadConfig({ cwd: dir })
+    expect(legacy).toBeNull()
+    expect(config).toMatchObject({ tagPrefix: 'v', bump: ['composer.json'] })
+  })
   it('detects legacy package.json.tagy when no .tagyrc', () => {
     writeFileSync(join(dir, 'package.json'), JSON.stringify({ version: '1.0.0', tagy: { tagPrefix: 'v' } }))
     const { config, legacy } = loadConfig({ cwd: dir })

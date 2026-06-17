@@ -47,7 +47,7 @@ export function loadConfig(
 
   const pkgPath = path.resolve(cwd, 'package.json')
   if (fsModule.existsSync(pkgPath)) {
-    const pkg = fsModule.readJsonSync(pkgPath)
+    const pkg = JSON.parse(fsModule.readFileSync(pkgPath, 'utf8'))
     if (pkg && pkg.tagy && typeof pkg.tagy === 'object') {
       return { config: null, legacy: pkg.tagy as Record<string, unknown> }
     }
@@ -56,7 +56,7 @@ export function loadConfig(
   return { config: null, legacy: null }
 }
 
-export function migrateLegacy(legacy: Record<string, any>): TagyConfig {
+export function migrateLegacy(legacy: Record<string, unknown>): TagyConfig {
   return {
     branch: null,
     tagPrefix: typeof legacy.tagPrefix === 'string' ? legacy.tagPrefix : '',
