@@ -4,7 +4,8 @@
   "description": "Create a new git tag by following the 'Semantic Versioning' and push it on remote.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "repository": {
     "type": "git",
@@ -20,19 +21,25 @@
     "release",
     "semver"
   ],
-  "author": "Andrew Surdu",
+  "author": "Andrei Surdu",
   "license": "MIT",
   "homepage": "https://github.com/awps/tagy#readme",
   "bin": {
     "tagy": "./cli.js"
   },
+  "files": [
+    "cli.js",
+    "index.js",
+    "lib.js"
+  ],
   "dependencies": {
-    "chalk": "^2.4.2",
     "fs-extra": "^8.1.0",
     "prompts": "^2.3.0",
-    "replace-in-file": "^7.0.1",
     "semver": "^6.3.0",
     "shelljs": "^0.9.0",
     "yargs": "^13.2.4"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.9"
   }
 }

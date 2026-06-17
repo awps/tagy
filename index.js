@@ -4,39 +4,22 @@
 const fs = require('fs-extra')
 const path = require('path')
 const shell = require("shelljs")
-const semver = require('semver')
 const args = require('yargs').argv
 const prompts = require('prompts')
-const chalk = require("chalk");
-const replace = require("replace-in-file");
+const {
+    createColor,
+    replaceInFiles,
+    buildReplaceConfig,
+    resolveIncrement,
+    normalizeCurrentVersion,
+    nextVersion,
+    bumpPackageVersion,
+} = require('./lib')
 
-const packageVersionBump = async (vv) => {
-    const pkgPath = path.join(process.cwd(), 'package.json')
-
-    if (fs.existsSync(pkgPath)) {
-        let pkgContent;
-
-        try {
-            pkgContent = await fs.readJSON(pkgPath);
-        } catch (err) {
-            throw new Error(`Couldn't parse "package.json"`)
-        }
-
-        pkgContent.version = vv;
-
-        try {
-            await fs.writeJSON(pkgPath, pkgContent, {
-                spaces: 2
-            });
-        } catch (err) {
-            throw new Error(`Couldn't write to "package.json"`)
-        }
-
-        return true;
-    }
-
-    return true;
-}
+const chalk = createColor({
+    isTTY: Boolean(process.stdout && process.stdout.isTTY),
+    env: process.env,
+})
 
 module.exports = function () {
     (async () => {
@@ -235,28 +218,18 @@ Options:
 
                 currentTag = vv;
             } else {
-                if (!vv) {
-                    vv = '0.0.0';
-                }
-
-                vv = vv.trim();
-
-                if (semver.ltr(vv, '0.0.0')) {
-                    vv = '0.0.0'
-                }
+                vv = normalizeCurrentVersion(vv);
 
                 currentTag = vv;
 
-                if (args.p || args.patch) {
-                    vv = semver.inc(vv, 'patch')
-                } else if (args.m || args.minor) {
-                    vv = semver.inc(vv, 'minor')
-                } else if (args.major) {
-                    vv = semver.inc(vv, 'major')
-                } else {
+                const incrementType = resolveIncrement(args);
+
+                if (!incrementType) {
                     console.log(chalk.red(`Something went wrong!.`))
                     return;
                 }
+
+                vv = nextVersion(vv, incrementType);
 
                 if (args.major) {
                     const confirmMajorRelease = await prompts({
@@ -276,7 +249,7 @@ Options:
 
             // Bump the version in package.json
             try {
-                canCreate = await packageVersionBump(vv);
+                canCreate = await bumpPackageVersion(vv);
             } catch (err) {
                 return console.log(err.message);
             }
@@ -302,18 +275,14 @@ Options:
                 console.log(chalk.green('♾️ Replacement methods are found!'));
 
                 for (let i = 0; i < replacementMethods.length; i++) {
-                    const {files, from, to, flags} = replacementMethods[i];
+                    const replaceConf = buildReplaceConfig(replacementMethods[i], {
+                        version: vv,
+                        currentTag,
+                        cwd: process.cwd(),
+                    });
 
-                    if (files && from && to) {
-                        const _files = Array.isArray(files) ? files : [files];
-
-                        const replaceConf = {
-                            files: _files.map(file => path.resolve(`${process.cwd()}/${file}`)),
-                            from: new RegExp(from.replaceAll('__CURRENT_TAG__', currentTag).replaceAll('__VERSION__', vv), flags !== false ? (flags || 'g') : undefined),
-                            to: to.replaceAll('__CURRENT_TAG__', currentTag).replaceAll('__VERSION__', vv),
-                        };
-
-                        replace.sync(replaceConf);
+                    if (replaceConf) {
+                        replaceInFiles(replaceConf);
                     }
                 }
             }
