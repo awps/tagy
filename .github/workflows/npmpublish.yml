@@ -6,18 +6,16 @@ on:
       - "*.*.*"
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 10
+          node-version: 22
           registry-url: https://registry.npmjs.org/
-      - run: |
-          sed -i -e 's|"version": "1.0.0"|"version": "'"$(sed -e "s/refs\/tags\///g" <<< $GITHUB_REF)"'"|g' ./package.json
-
+      - run: npm install
+      - run: npm test
       - run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
-
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
