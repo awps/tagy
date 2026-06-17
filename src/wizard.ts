@@ -1,9 +1,12 @@
 import path from 'path'
 import fs from 'fs-extra'
+import prompts from 'prompts'
 import { KNOWN_BUMP_FILES } from './bump'
 import type { TagyConfig } from './types'
 
 type Ask = (question: any) => Promise<{ value: any }>
+
+const defaultAsk: Ask = (question) => prompts(question)
 
 export interface WizardResult { config: TagyConfig; save: boolean }
 
@@ -12,8 +15,8 @@ export function existingBumpFiles(cwd: string, fsModule: typeof fs = fs): string
 }
 
 export async function runWizard(
-  { cwd, branch, promptsLib, fs: fsModule = fs }:
-    { cwd: string; branch: string; promptsLib: Ask; fs?: typeof fs },
+  { cwd, branch, promptsLib = defaultAsk, fs: fsModule = fs }:
+    { cwd: string; branch: string; promptsLib?: Ask; fs?: typeof fs },
 ): Promise<WizardResult | null> {
   const confirmBranch = await promptsLib({
     type: 'confirm', name: 'value',
