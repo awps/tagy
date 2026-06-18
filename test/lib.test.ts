@@ -20,12 +20,21 @@ describe('createColor', () => {
   it('plain text for non-TTY', () => {
     expect(createColor({ isTTY: false, env: {} }).yellow('W')).toBe('W')
   })
+  it('NO_COLOR wins over FORCE_COLOR', () => {
+    expect(createColor({ isTTY: true, env: { NO_COLOR: '', FORCE_COLOR: '1' } }).blue('Y')).toBe('Y')
+  })
+  it('coerces non-string input to a string', () => {
+    expect(createColor({ isTTY: false, env: {} }).red(42 as any)).toBe('42')
+  })
 })
 
 describe('substitute', () => {
   it('replaces both placeholders, all occurrences', () => {
     expect(substitute('__VERSION__ __CURRENT_TAG__ __VERSION__', { version: '1.2.4', currentTag: '1.2.3' }))
       .toBe('1.2.4 1.2.3 1.2.4')
+  })
+  it('coerces non-string values', () => {
+    expect(substitute(123 as any, { version: '1.0.0', currentTag: '0.9.0' })).toBe('123')
   })
 })
 
@@ -69,6 +78,11 @@ describe('buildReplaceConfig', () => {
   })
   it('flags:false -> no flags', () => {
     expect(buildReplaceConfig({ files: 'f', from: 'a', to: 'b', flags: false }, ctx)!.from.flags).toBe('')
+  })
+  it('resolves an array of files and honors a custom flags string', () => {
+    const c = buildReplaceConfig({ files: ['a.css', 'b.css'], from: 'a', to: 'b', flags: 'gi' }, { version: '1.2.4', currentTag: '1.2.3', cwd: '/proj' })!
+    expect(c.files).toEqual([resolve('/proj/a.css'), resolve('/proj/b.css')])
+    expect(c.from.flags).toBe('gi')
   })
 })
 

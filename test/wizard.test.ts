@@ -32,7 +32,7 @@ describe('runWizard', () => {
     // answers: confirm branch=true, prefix='v', bump=['package.json'], save=true
     const result = await runWizard({ cwd: dir, branch: 'main', promptsLib: scripted([true, 'v', ['package.json'], true]) as any })
     expect(result).toEqual({
-      config: { branch: 'main', tagPrefix: 'v', bump: ['package.json'], replace: [], autoRelease: false },
+      config: { branch: null, tagPrefix: 'v', bump: ['package.json'], replace: [], autoRelease: false },
       save: true,
     })
   })
@@ -41,8 +41,21 @@ describe('runWizard', () => {
     // answers: confirm=true, prefix='', save=false  (no bump prompt)
     const result = await runWizard({ cwd: dir, branch: 'main', promptsLib: scripted([true, '', false]) as any })
     expect(result).toEqual({
-      config: { branch: 'main', tagPrefix: '', bump: [], replace: [], autoRelease: false },
+      config: { branch: null, tagPrefix: '', bump: [], replace: [], autoRelease: false },
       save: false,
     })
+  })
+
+  it('skipBranchConfirm: true skips branch prompt, still returns valid config', async () => {
+    writeFileSync(join(dir, 'package.json'), '{}')
+    // First scripted answer would decline branch (false), but it is never consumed.
+    // With skipBranchConfirm=true, prompts start at prefix='v', bump=['package.json'], save=true
+    const result = await runWizard({
+      cwd: dir, branch: 'feature', skipBranchConfirm: true,
+      promptsLib: scripted(['v', ['package.json'], true]) as any,
+    })
+    expect(result).not.toBeNull()
+    expect(result!.config).toEqual({ branch: null, tagPrefix: 'v', bump: ['package.json'], replace: [], autoRelease: false })
+    expect(result!.save).toBe(true)
   })
 })

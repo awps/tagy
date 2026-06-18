@@ -7,9 +7,14 @@ export const KNOWN_BUMP_FILES = ['package.json', 'composer.json'] as const
 
 export function bumpJsonVersion(absFile: string, version: string, fsModule: typeof fs = fs): boolean {
   if (!fsModule.existsSync(absFile)) return false
-  const content = fsModule.readJsonSync(absFile)
+  let content: any
+  try {
+    content = JSON.parse(fsModule.readFileSync(absFile, 'utf8'))
+  } catch {
+    throw new Error(`Couldn't parse "${absFile}"`)
+  }
   content.version = version
-  fsModule.writeJsonSync(absFile, content, { spaces: 2 })
+  fsModule.writeFileSync(absFile, JSON.stringify(content, null, 2) + '\n')
   return true
 }
 

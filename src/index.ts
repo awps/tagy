@@ -86,7 +86,7 @@ export default function (): void {
     // --- no config at all: wizard ---
     let isSoft = Boolean(args.soft)
     if (!config) {
-      const wizard = await runWizard({ cwd, branch, promptsLib: ask })
+      const wizard = await runWizard({ cwd, branch, promptsLib: ask, skipBranchConfirm: isSoft })
       if (!wizard) {
         console.log(chalk.red.bold('Aborted! Please switch the branch.'))
         return

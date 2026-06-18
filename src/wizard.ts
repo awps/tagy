@@ -15,14 +15,16 @@ export function existingBumpFiles(cwd: string, fsModule: typeof fs = fs): string
 }
 
 export async function runWizard(
-  { cwd, branch, promptsLib = defaultAsk, fs: fsModule = fs }:
-    { cwd: string; branch: string; promptsLib?: Ask; fs?: typeof fs },
+  { cwd, branch, promptsLib = defaultAsk, fs: fsModule = fs, skipBranchConfirm = false }:
+    { cwd: string; branch: string; promptsLib?: Ask; fs?: typeof fs; skipBranchConfirm?: boolean },
 ): Promise<WizardResult | null> {
-  const confirmBranch = await promptsLib({
-    type: 'confirm', name: 'value',
-    message: `You're on branch '${branch}'. Tag this branch?`, initial: true,
-  })
-  if (!confirmBranch.value) return null
+  if (!skipBranchConfirm) {
+    const confirmBranch = await promptsLib({
+      type: 'confirm', name: 'value',
+      message: `You're on branch '${branch}'. Tag this branch?`, initial: true,
+    })
+    if (!confirmBranch.value) return null
+  }
 
   const prefixAns = await promptsLib({
     type: 'text', name: 'value', message: 'Tag prefix? (blank for none)', initial: '',
@@ -39,7 +41,7 @@ export async function runWizard(
     bump = Array.isArray(bumpAns.value) ? bumpAns.value : []
   }
 
-  const config: TagyConfig = { branch, tagPrefix, bump, replace: [], autoRelease: false }
+  const config: TagyConfig = { branch: null, tagPrefix, bump, replace: [], autoRelease: false }
 
   const saveAns = await promptsLib({
     type: 'confirm', name: 'value',

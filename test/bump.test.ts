@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { tmpdir } from 'node:os'
-import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs'
+import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { KNOWN_BUMP_FILES, bumpFiles, applyReplaceRules, writeConfig } from '../src/bump'
 
@@ -29,6 +29,10 @@ describe('bumpFiles', () => {
   it('ignores unknown file names', () => {
     writeFileSync(join(dir, 'random.json'), '{"version":"1.0.0"}')
     expect(bumpFiles(['random.json'], '2.0.0', { cwd: dir })).toEqual([])
+  })
+  it('throws a friendly error on malformed JSON', () => {
+    writeFileSync(join(dir, 'package.json'), '{ bad json')
+    expect(() => bumpFiles(['package.json'], '1.0.1', { cwd: dir })).toThrow("Couldn't parse")
   })
 })
 
