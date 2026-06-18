@@ -2,10 +2,21 @@
   "name": "tagy",
   "version": "1.10.8",
   "description": "Create a new git tag by following the 'Semantic Versioning' and push it on remote.",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "bin": {
+    "tagy": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
+    "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepack": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -24,14 +35,6 @@
   "author": "Andrei Surdu",
   "license": "MIT",
   "homepage": "https://github.com/awps/tagy#readme",
-  "bin": {
-    "tagy": "./cli.js"
-  },
-  "files": [
-    "cli.js",
-    "index.js",
-    "lib.js"
-  ],
   "dependencies": {
     "fs-extra": "^8.1.0",
     "prompts": "^2.3.0",
@@ -40,6 +43,13 @@
     "yargs": "^13.2.4"
   },
   "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^25.9.3",
+    "@types/prompts": "^2.4.9",
+    "@types/semver": "^7.7.1",
+    "@types/shelljs": "^0.10.0",
+    "@types/yargs": "^17.0.35",
+    "typescript": "^6.0.3",
     "vitest": "^4.1.9"
   }
 }
