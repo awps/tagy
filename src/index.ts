@@ -38,6 +38,29 @@ export default function (): void {
       return
     }
 
+    // Read-only / maintenance commands short-circuit before any config
+    // resolution or interactive wizard — they only need the tag prefix.
+    if (args.info || args.reverse) {
+      const { config: existing } = loadConfig({ cwd })
+      const prefix = existing?.tagPrefix || ''
+      git.fetchTags()
+      const raw = git.latestTag(prefix)
+
+      if (args.info) {
+        console.log(raw ? chalk.blue(`Last created tag is: ${raw}`) : chalk.blue('No tags created yet.'))
+        return
+      }
+
+      // args.reverse
+      if (args.soft) { console.log(chalk.red("Can't reverse in soft mode.")); return }
+      if (!raw) { console.log(chalk.blue('No tags to delete.')); return }
+      const confirmReverse = await ask({ type: 'confirm', name: 'value', message: `Remove tag ${raw.trim()}?`, initial: false })
+      if (!confirmReverse.value) { console.log(chalk.red.bold('Aborted!')); return }
+      git.deleteTag(raw.trim())
+      console.log(chalk.blue(`Tag ${raw.trim()} deleted.`))
+      return
+    }
+
     // --- resolve config ---
     const { config: loaded, legacy } = loadConfig({ cwd, warn: (m) => console.log(chalk.yellow(m)) })
     let config: TagyConfig | null = loaded
@@ -98,28 +121,12 @@ export default function (): void {
     if (!isSoft) git.fetchTags()
     let raw = isSoft ? '' : git.latestTag(tagPrefix)
 
-    if (args.info) {
-      console.log(raw ? chalk.blue(`Last created tag is: ${raw}`) : chalk.blue('No tags created yet.'))
-      return
-    }
-
-    if (args.reverse) {
-      if (isSoft) { console.log(chalk.red("Can't reverse in soft mode.")); return }
-      if (!raw) { console.log(chalk.blue('No tags to delete.')); return }
-      const confirmReverse = await ask({
-        type: 'confirm', name: 'value', message: `Remove tag ${raw.trim()}?`, initial: false,
-      })
-      if (!confirmReverse.value) { console.log(chalk.red.bold('Aborted!')); return }
-      git.deleteTag(raw.trim())
-      console.log(chalk.blue(`Tag ${raw.trim()} deleted.`))
-      return
-    }
-
     // --- compute next version ---
     let currentTag: string
     let version: string
 
     if (args.custom) {
+      const prevTag = normalizeCurrentVersion(raw)
       const customVer = await ask({
         type: 'text', name: 'value',
         message: 'Enter a custom version (semver):',
@@ -127,7 +134,7 @@ export default function (): void {
       })
       if (!customVer.value) { console.log(chalk.red.bold('Aborted!')); return }
       version = customVer.value
-      currentTag = version
+      currentTag = prevTag
     } else {
       currentTag = normalizeCurrentVersion(raw)
       if (!increment) { console.log(chalk.red('Something went wrong!')); return }
