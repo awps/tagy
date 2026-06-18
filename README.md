@@ -44,7 +44,7 @@ tagy reads configuration from a `.tagyrc` file (JSON) in your project root. All 
 
 ```jsonc
 {
-  "branch": null,           // null = confirm if not on master/main; string = require this branch
+  "branch": null,           // null = silent on master/main, confirm prompt on any other branch; string = require this exact branch
   "tagPrefix": "",          // e.g. "v" → tag "v1.2.3"; file versions written unprefixed
   "bump": [],               // structural version bumps: ["package.json", "composer.json"]
   "replace": [],            // regex replacement rules (see below)

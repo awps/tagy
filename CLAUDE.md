@@ -55,11 +55,11 @@ Config is a standalone `.tagyrc` JSON file. Schema keys (all optional):
 ## Execution flow (`index.ts`)
 
 1. **Arg validation** — rejects too many args or conflicting increment flags.
-2. **Config resolution** — `.tagyrc` / `.tagyrc.json` / legacy migration / wizard.
-3. **Branch check** — abort if wrong branch (strict mode), or confirm prompt on non-master/main.
-4. **Determine current version** — `git.latestTag(prefix)`, normalize via `normalizeCurrentVersion`.
-5. **`--info`** short-circuits here.
-6. **Compute next version** — `semver.inc()` for patch/minor/major; `--major` and `--reverse` require confirmation prompts; `--custom` prompts for value.
+2. **`--info` / `--reverse` short-circuit here** — read-only/maintenance commands run before config resolution and never launch the wizard. They read the tag prefix from `.tagyrc` if it exists (else none), then `git.fetchTags()` + `git.latestTag(prefix)`. `--info` prints the latest tag; `--reverse` deletes/pushes-deletion of the last tag after a confirm prompt (blocked in `--soft`).
+3. **Config resolution** — `.tagyrc` / `.tagyrc.json` / legacy migration / wizard.
+4. **Branch check** — abort if wrong branch (strict mode), or confirm prompt on non-master/main.
+5. **Determine current version** — `git.latestTag(prefix)`, normalize via `normalizeCurrentVersion`.
+6. **Compute next version** — `semver.inc()` for patch/minor/major (`--major` requires a confirmation prompt); `--custom` prompts for a value.
 7. **Apply changes** — structural bumps (`bump.ts`); replace rules; `tagy.js` hook (if present).
 8. **Git ops** (non-soft only) — commit, push branch, create tag, push tag; `gh release create` (if `autoRelease` or prompted).
 

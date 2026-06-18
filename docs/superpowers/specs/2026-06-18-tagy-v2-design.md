@@ -129,6 +129,8 @@ silently dropping that behavior on upgrade.
 
 ## Execution flow
 
+> Refinement adopted during implementation: `--info` and `--reverse` short-circuit *before* config resolution / the wizard — a read-only `--info` must never launch the wizard. They read `tagPrefix` from `.tagyrc` if present, otherwise use no prefix.
+
 ### Path 1 — `.tagyrc` present (non-interactive)
 
 ```
