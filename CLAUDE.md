@@ -4,41 +4,70 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`tagy` is a globally-installed CLI (`bin: tagy` → `cli.js`) that creates a SemVer git tag, bumps `package.json`, optionally runs custom file replacements, pushes the commit + tag to origin, and optionally creates a GitHub release. It runs against *the user's* current working directory (`process.cwd()`), not against this repo.
+`tagy` is a globally-installed CLI (`bin: tagy` → `dist/cli.js`) that creates a SemVer git tag, optionally bumps version files, optionally runs custom file replacements, pushes the commit + tag to origin, and optionally creates a GitHub release. It runs against *the user's* current working directory (`process.cwd()`), not against this repo. v2 is language-agnostic and works in any git repository.
 
 ## Commands
 
-- Test: `npm test` (Vitest, single run) or `npm run test:watch`. Run one file: `npx vitest run test/lib.test.js`; one case: `npx vitest run -t "nextVersion"`.
-- Run locally against another project: `node /Users/awps/Projects/MY/tagy/cli.js --patch` from that project's directory.
-- Install for local dev: `npm i -g .` then use `tagy ...` anywhere.
+- Build: `npm run build` (tsc, compiles `src/` → `dist/`). Required before running locally.
+- Test: `npm test` (Vitest runs directly against `.ts` source, no build needed) or `npm run test:watch`. Run one file: `npx vitest run test/lib.test.ts`; one case: `npx vitest run -t "nextVersion"`.
+- Typecheck: `npx tsc --noEmit` (no output files, just type errors).
+- Run locally against another project: `node /Users/awps/Projects/MY/tagy/dist/cli.js --patch` from that project's directory (requires a prior `npm run build`).
+- Install for local dev: `npm run build && npm i -g .` then use `tagy ...` anywhere.
 - Releasing tagy itself is done with tagy: `tagy --patch` (see recent commits "Release x.y.z").
-
-There is no build or lint step.
 
 CLI flags: `-p/--patch`, `-m/--minor`, `--major`, `--reverse`, `--info`, `--custom`, `--soft`, `--auto-release`, `-h`.
 
 ## Architecture
 
-Code is split between two files (`cli.js` is a 6-line shim that requires and invokes `index.js`):
+The codebase is TypeScript, compiled with plain `tsc`. Source is in `src/*.ts`, compiled to `dist/`. Published artifact is `dist/` only (see `files` in `package.json`). A `prepack` script ensures `dist/` is always built before publishing.
 
-- **`lib.js`** — pure, side-effect-free helpers, each unit-tested in `test/lib.test.js`: `createColor` (chainable zero-dep chalk replacement; color on for TTY/`FORCE_COLOR`, off for `NO_COLOR`/piped), `replaceInFiles` (zero-dep replace-in-file replacement), `substitute` (`__VERSION__`/`__CURRENT_TAG__`), `buildReplaceConfig`, `resolveIncrement`, `normalizeCurrentVersion`, `nextVersion`, `bumpPackageVersion`. Dependencies (fs, cwd) are passed as args so they're testable. **Prefer adding new logic here** rather than in the IIFE.
-- **`index.js`** — the CLI orchestration: one big async IIFE that wires the `lib.js` helpers together with the side-effecting parts (git via `shelljs`, interactive `prompts`, reading the target `package.json`). This shell is not unit-tested.
+### Modules
 
-Execution flow of the `index.js` IIFE:
+- **`src/cli.ts`** — 6-line shim with shebang; requires and invokes `index.ts`. Compiles to `dist/cli.js` (the `bin` entry).
+- **`src/index.ts`** — CLI orchestration only: wires the modules together and drives the CLI flow. Not unit-tested (thin shell validated manually).
+- **`src/lib.ts`** — pure, side-effect-free helpers: `createColor` (chainable zero-dep chalk replacement), `replaceInFiles` (zero-dep replace-in-file), `substitute` (`__VERSION__`/`__CURRENT_TAG__`), `buildReplaceConfig`, `resolveIncrement`, `normalizeCurrentVersion`, `nextVersion`. Dependencies (fs, cwd) are passed as args so they're testable. **Prefer adding new logic here** rather than in the orchestration IIFE.
+- **`src/config.ts`** — resolves and parses `.tagyrc` (JSON), validates/normalizes the schema, detects legacy `package.json.tagy` blocks and builds a migration object. Resolution order: `.tagyrc` → `.tagyrc.json` → legacy `package.json.tagy` (migration) → wizard.
+- **`src/wizard.ts`** — interactive prompts when no config exists. Asks: branch confirm, tag prefix, which known files to bump (only shows files that exist), save to `.tagyrc`?. Does NOT ask about replace rules. Returns a normalized config object (same shape as `config.ts` output).
+- **`src/bump.ts`** — known-file registry for structural version bumps (`package.json`, `composer.json` only); also handles `applyReplaceRules` and `writeConfig` (writes `.tagyrc`). Owns all file writes.
+- **`src/git.ts`** — thin shelljs wrapper: `insideRepo`, `currentBranch`, `latestTag`, `fetchTags`, `commit`, `push`, `tag`, `deleteTag`, `ghReleaseCreate`, `ghAvailable`. Takes `shell` as an injected arg for testability.
+- **`src/types.ts`** — shared TypeScript types/interfaces.
 
-1. **Arg validation** — rejects too many args or conflicting increment flags (only one of patch/minor/major/reverse/custom/info allowed).
-2. **Read `package.json`** from `process.cwd()`; pull the optional `tagy` config block (`tagPrefix`, `soft`, `auto-release`, `replace`).
-3. **Soft mode** (`--soft` or `tagy.soft`) — does file replacement only; never touches git. `tagy.method === 'soft'` is the deprecated form.
-4. **Determine current version** — in git mode, reads the latest existing tag via `git tag --sort=v:refname | grep '^<prefix>[0-9]' | tail -1`; in soft mode uses `package.json` version. `--info` short-circuits here.
-5. **Compute next version** — `semver.inc()` for patch/minor/major, or a prompted custom value. `--major` and `--reverse` require confirmation prompts.
-6. **Apply changes** — bump `package.json`; run `tagy.js` hook if present; run `tagy.replace` rules.
-7. **Git ops** (non-soft only) — commit, push branch, create tag, push tag, then optionally `gh release create`.
+### Test files
+
+One test file per module under `test/`: `lib.test.ts`, `config.test.ts`, `wizard.test.ts`, `bump.test.ts`, `git.test.ts`. Total: 39 tests. Vitest runs them directly against `.ts` source via its esbuild transform.
+
+## Configuration model (`.tagyrc`)
+
+Config is a standalone `.tagyrc` JSON file. Schema keys (all optional):
+
+```jsonc
+{
+  "branch": null,         // null = confirm if not master/main; string = require exact branch
+  "tagPrefix": "",        // e.g. "v" -> tag "v1.2.3", file versions written unprefixed
+  "bump": [],             // structural bumps: ["package.json", "composer.json"] ONLY
+  "replace": [],          // regex rules: { files, from, to, flags }
+  "autoRelease": false    // gh release without prompting
+}
+```
+
+**Current version source:** always read from the latest git tag (prefix-aware). File versions are written unprefixed. Default with no/minimal config: verify git repo, tag + push; touch no files.
+
+## Execution flow (`index.ts`)
+
+1. **Arg validation** — rejects too many args or conflicting increment flags.
+2. **Config resolution** — `.tagyrc` / `.tagyrc.json` / legacy migration / wizard.
+3. **Branch check** — abort if wrong branch (strict mode), or confirm prompt on non-master/main.
+4. **Determine current version** — `git.latestTag(prefix)`, normalize via `normalizeCurrentVersion`.
+5. **`--info`** short-circuits here.
+6. **Compute next version** — `semver.inc()` for patch/minor/major; `--major` and `--reverse` require confirmation prompts; `--custom` prompts for value.
+7. **Apply changes** — structural bumps (`bump.ts`); replace rules; `tagy.js` hook (if present).
+8. **Git ops** (non-soft only) — commit, push branch, create tag, push tag; `gh release create` (if `autoRelease` or prompted).
 
 ### Key behaviors to preserve
 
-- **External tooling via `shelljs`**: relies on the user having `git` and (for releases) the `gh` CLI on PATH. Branch detection only proceeds on `master`/`main` without a confirmation prompt.
-- **`tagPrefix`** is prepended to the git tag and release name (e.g. `v1.2.3`) but the `package.json` version stays unprefixed.
-- **Extensibility hooks** run before `git push`:
-  - A `tagy.js` file in the target project: `module.exports = (newVersion, oldVersion, args) => {...}`.
-  - `tagy.replace[]` rules in `package.json`, each `{files, from, to, flags}`. `from`/`to` support `__VERSION__` (new version) and `__CURRENT_TAG__` placeholders; `from` is compiled to a `RegExp`.
-- All user interaction uses `prompts`; all colored output uses `chalk`.
+- **Soft mode** (`--soft`): apply bumps + replace rules only; never touches git. Config `soft`/`method:"soft"` keys are removed in v2 (CLI flag only).
+- **`tagPrefix`** is prepended to the git tag and release name; file versions stay unprefixed.
+- **`tagy.js` hook** in the target project runs before `git push`: `module.exports = (newVersion, oldVersion, args) => {...}`.
+- **`replace` rules** `from`/`to` support `__VERSION__` and `__CURRENT_TAG__` placeholders; `from` is compiled to a `RegExp`.
+- **Supported `bump` files**: `package.json` and `composer.json` only. Other files use `replace` rules.
+- **External tooling**: requires `git` on PATH; `gh` on PATH for GitHub releases.
